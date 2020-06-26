@@ -23,7 +23,10 @@ fn main() {
 
 
 fn get_discord_token() -> String { // Get token from toml
+	get_razi_config().discord.token
+}
 
+fn get_razi_config() -> RaziConfig {
 	let mut toml_file = match File::open("./Razi.toml") {
 		Ok(file) => file,
 		Err(_) => {
@@ -50,6 +53,5 @@ fn get_discord_token() -> String { // Get token from toml
 		panic!("Exiting due to toml conversion failure");
 	} 
 
-	let config = config.unwrap();
-	config.discord.token
+	config.unwrap()
 }
