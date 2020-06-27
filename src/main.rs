@@ -1,57 +1,63 @@
-use toml::from_str;
-use serde::Deserialize;
-use std::fs::File;
-use std::io::prelude::*;
+use serenity::{
+	model::{channel::Message, gateway::Ready},
+	framework::standard::{macros::*, CommandResult, StandardFramework},
+	prelude::*,
+};
 
+pub mod toml; // discord settings
 
-// TODO: Add other parameters to toml
-// TODO: Make file if it doesnt exist
+#[group]
+#[commands(info)]
+struct General;
 
-#[derive(Deserialize)]
-struct RaziConfig {
-	discord: Discord,
-}
+struct Handler;
 
-#[derive(Deserialize)]
-struct Discord {
-	token: String,
+impl EventHandler for Handler {
+	fn ready(&self, _:Context, ready: Ready){
+		println!("{} is now connected!", ready.user.name);
+	}
 }
 
 fn main() {
-	println!("{}",get_discord_token());
+	let mut client = Client::new(toml::get_discord_token(), Handler).expect("Error creating client");
+
+	client.with_framework(StandardFramework::new()
+		.configure(|c| c.prefix("~"))
+		.group(&GENERAL_GROUP));
+
+	if let Err(why) = client.start() {
+		println!("Client error: {:?}", why);
+	}
 }
 
 
-fn get_discord_token() -> String { // Get token from toml
-	get_razi_config().discord.token
-}
 
-fn get_razi_config() -> RaziConfig {
-	let mut toml_file = match File::open("./Razi.toml") {
-		Ok(file) => file,
-		Err(_) => {
-			panic!("File could not be found");
-		}
-	};
+/// ///////////////////
+/// Commands sit below
+/// 
 
-	let mut config = String::new();
+#[command]
+fn info(ctx: &mut Context, msg: &Message) -> CommandResult {
+	let msg = msg.channel_id.send_message(&ctx.http, |m| {
+		m.embed(|e| {
+			e.title("Purpose of this bot");
+			e.description("Source code can be found here: <https://github.com/Vam-Jam/Razi>");
+			e.thumbnail("https://cdn.discordapp.com/attachments/551770125578010624/726435452525084672/hackerman.jpg");
+			e.fields(vec![
+				("Why another bot?", "bored lol", false),
+				("Why is it named Razi?", 
+					"Riza's source code kinda sucked, 0 error handling, and just general weird layout.\nThis bot however is being made ground up with ease of use.", false),
+				("Can i suggest stuff?", "Sure, ping me and ill add it to <https://trello.com/b/rdklywLp/razi> if i think its do-able and suitable", false),
+			]);
+			e
+		});
+		m
+	});
 
-	match toml_file.read_to_string(&mut config) {
-		Ok(_) => (), 
-		Err(error) => panic!("File could not be read! {:?}", error),
+	if let Err(why) = msg {
+		println!("Error sending info:\n{:?}", why);
 	}
 
-	let config: Option<RaziConfig> = match from_str(config.as_str()) {
-		Ok(login) => Some(login),
-		Err(error) => {
-			println!("Couldnt convert to toml! {:?}", error);
-			None
-		}
-	};
-
-	if config.is_none() {
-		panic!("Exiting due to toml conversion failure");
-	} 
-
-	config.unwrap()
+	Ok(())
 }
+
