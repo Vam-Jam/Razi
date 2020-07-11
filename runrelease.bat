@@ -1,1 +1,4 @@
-cargo run --release -- -C target-cpu=native
+@ECHO OFF
+SET RUSTFLAGS=-C target-cpu=native
+
+cargo run --release

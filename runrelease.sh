@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cargo run --release -- -C target-cpu=native
+RUSTFLAGS="-C target-cpu=native" cargo run --release
