@@ -63,7 +63,7 @@ fn main() {
 		.configure(|c| c
 			.allow_dm(false)
 			.case_insensitivity(true)
-			.prefix(&config.discord.prefix.as_str())
+			.prefixes(&config.discord.prefixes)
 			.owners(owners)
 			.allowed_channels( { 
 				let mut allowed_channels: HashSet<ChannelId> = HashSet::new();

@@ -24,7 +24,7 @@ pub_struct!(RaziConfig {
 
 pub_struct!(Discord {
 	token: String,
-	prefix: String,
+	prefixes: Vec<String>,
 	allowed_channels: Vec<u64>,
 	owners: Vec<u64>,
 });
