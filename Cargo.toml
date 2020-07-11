@@ -19,6 +19,3 @@ chrono = "0.4.13"
 opt-level = 3
 lto="fat"
 codegen-units = 1
-rustflags = ["-C target-cpu=native"]
-
-#panic = "abort"
