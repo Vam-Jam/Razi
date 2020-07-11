@@ -1,9 +1,11 @@
 use toml::from_str;
 use serde::{Deserialize};
-use std::clone::Clone;
-use std::default::Default;
-use std::fs::File;
-use std::io::prelude::*;
+use std::{
+	clone::Clone,
+	default::Default,
+	fs::File,
+	io::prelude::Read,
+};
 
 // shamelessly stolen from stackoverflow because i dont fully understand macro's
 macro_rules! pub_struct {
@@ -31,6 +33,7 @@ pub_struct!(KagServer {
 	names: Vec<String>,
 	ip: String,
 	port: String,
+	minimap: bool,
 });
 
 impl RaziConfig {

@@ -1,18 +1,23 @@
-
 [discord]
 token = ""
-prefix = "~"
+prefix = "."
 allowed_channels = [386495658418503680, 610155351047667752]
-owners = [233738372814864395, 301370472594014218, 165600688590553088, 1423004090028523520]
-
-
+owners = [233738372814864395, 301370472594014218, 165600688590553088, 142300409002852352]
 
 [[kag_server]]
 names = ["tc"]
 ip = "85.10.195.233"
 port = "50309"
+minimap = true
 
 [[kag_server]]
-names = ["test"]
-ip = "127.0.0.1"
-port = "50309"
+names = ["mc", "3d", "goldenguy"]
+ip = "85.10.195.233"
+port = "50303"
+minimap = true
+
+[[kag_server]]
+names = ["kaww", "kaw", "warfare"]
+ip = "85.10.195.233"
+port = "50308"
+minimap = false
