@@ -3,19 +3,35 @@ use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
 
-#[derive(Deserialize)]
-struct RaziConfig {
-	discord: Discord,
+// shamelessly stolen from stackoverflow because i dont fully understand macro's
+macro_rules! pub_struct {
+    ($name:ident {$($field:ident: $t:ty,)*}) => {
+        #[derive(Deserialize)]
+        pub struct $name {
+            $(pub $field: $t),*
+        }
+    }
 }
 
-#[derive(Deserialize)]
-struct Discord {
+pub_struct!(RaziConfig {
+	discord: Discord,
+});
+
+pub_struct!(Discord {
 	token: String,
-}
+	prefix: String,
+	allowed_channels: Vec<u64>,
+	owners: Vec<u64>,
+});
+
 
 
 pub fn get_discord_token() -> String { // Get token from toml
 	get_razi_config().discord.token
+}
+
+pub fn get_config() -> RaziConfig { // Get token from toml
+	get_razi_config()
 }
 
 fn get_razi_config() -> RaziConfig {
