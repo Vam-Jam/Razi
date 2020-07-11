@@ -1,4 +1,4 @@
-use std::{collections::{HashSet}};
+use std::{collections::{HashSet}, cell::{RefCell, RefMut, Ref}};
 use serenity::{
 	model::{channel::Message, gateway::Ready, id::{UserId, ChannelId}},
 	framework::standard::{Args, HelpOptions, CommandGroup, macros::*, CommandResult, 
@@ -7,6 +7,8 @@ use serenity::{
 };
 
 pub mod toml; // discord settings
+
+thread_local!(static RaziConfig: RefCell<toml::RaziConfig> = RefCell::new(toml::RaziConfig::get_config()));
 
 #[group]
 #[commands(info)]
@@ -25,15 +27,20 @@ impl EventHandler for Handler {
 }
 
 fn main() {
-	let raziconfig = toml::get_config();
+	let mut config = toml::RaziConfig::new();
 
-	let mut client = Client::new(&raziconfig.discord.token, Handler).expect("Error creating client");
+	RaziConfig.with(|cell| {
+		config = cell.borrow().clone();
+
+	});
+	
+	let mut client = Client::new(&config.discord.token, Handler).expect("Error creating client");
 
 	let (owners, bot_id) = match client.cache_and_http.http.get_current_application_info() { // get owner id for a few commands
         Ok(info) => {
             let mut owners = HashSet::new();
 			owners.insert(info.owner.id);
-			for owner in &raziconfig.discord.owners {
+			for owner in &config.discord.owners {
 				owners.insert(UserId(*owner));
 			}
 
@@ -46,12 +53,12 @@ fn main() {
 		.configure(|c| c
 			.allow_dm(false)
 			.case_insensitivity(true)
-			.prefix(&raziconfig.discord.prefix.as_str())
+			.prefix(&config.discord.prefix.as_str())
 			.owners(owners)
 			.allowed_channels( { 
 				let mut allowed_channels: HashSet<ChannelId> = HashSet::new();
 				
-				for channels in &raziconfig.discord.allowed_channels {
+				for channels in &config.discord.allowed_channels {
 					allowed_channels.insert(ChannelId(channels.clone()));
 				}
 
@@ -132,7 +139,13 @@ fn my_help(
 #[description("View server status, read pins to see current active list")]
 #[owners_only(true)]
 fn server_request(ctx: &mut Context, msg: &Message) -> CommandResult {
-	
+	let raziconfig = toml::RaziConfig::get_config(); // todo, cache and add a command to hot reload
+	let list = raziconfig.kag_server;
+
+	for server in list {
+		println!("{}", server.ip);
+	}
+
 
 	Ok(())
 }
