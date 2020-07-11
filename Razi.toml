@@ -21,3 +21,9 @@ names = ["kaww", "kaw", "warfare"]
 ip = "85.10.195.233"
 port = "50308"
 minimap = false
+
+[[kag_server]]
+names = ["wizard", "ww"]
+ip = "85.10.195.233"
+port = "50301"
+minimap = true
