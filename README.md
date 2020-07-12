@@ -8,10 +8,8 @@ The main issue with riza was poor error handling, timing out and much more. To f
 
 Razi is using [serenity-rs api](https://github.com/serenity-rs/serenity)
 
-# How did you make it easier 'maintain' ?
-First off was just getting more use to rust, and pushing my self to do stuff like reading from config files, understanding lifetime and variables more, and spending that little bit longer learning what serenity can do.
-<br><br>
-To start this off, i made razi's toml file, which lets you change the token, prefixes, allowed channels, owners.
+# How did you make it easier to 'maintain' ?
+The main way was too add a razi's toml file, which lets you change the token, prefixes, allowed channels, owners.
 ```
 [discord]
 token = ""
@@ -38,5 +36,5 @@ I'll add a guide on how to do it later on, feel free to message me if you dont u
 <br>
 
 # Thank you notes:
-- Thank you to the serenity-rs team, they have helped me in the past and their discord is a useful source for finding errors
+- Thank you to the serenity-rs team, they have helped me fix issues in the past.=
 - Caesar for making the picture
