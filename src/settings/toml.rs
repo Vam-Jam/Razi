@@ -19,14 +19,16 @@ macro_rules! pub_struct {
 
 pub_struct!(RaziConfig {
 	discord: Discord,
-	kag_server: Vec<KagServer>,
+	kag_server: Option<Vec<KagServer>>,
 });
 
 pub_struct!(Discord {
-	token: String,
+	release_token: String,
+	test_token: String,
 	prefixes: Vec<String>,
 	allowed_channels: Vec<u64>,
 	owners: Vec<u64>,
+	release_run: bool,
 });
 
 pub_struct!(KagServer {
@@ -69,7 +71,7 @@ impl RaziConfig {
 		};
 
 		if config.is_none() {
-			panic!("Exiting due to toml conversion failure");
+			//panic!("Exiting due to toml conversion failure");
 		} 
 
 		config.unwrap()

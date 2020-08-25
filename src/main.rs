@@ -1,10 +1,14 @@
+pub mod commands;
+pub mod settings;
+
 use std::{
 	collections::{HashSet}, 
 	cell::{RefCell }
 };
 use serenity::{
-	model::{channel::Message, gateway::Ready, id::{UserId, ChannelId}},
-	framework::standard::{Args, Delimiter, HelpOptions, CommandGroup, macros::*, CommandResult, 
+	builder::CreateMessage,
+	model::{channel::Message, guild::Member, user::User, gateway::Ready, id::{RoleId, UserId, ChannelId, GuildId}},
+	framework::standard::{Args, HelpOptions, CommandGroup, macros::*, CommandResult, 
 		StandardFramework,  help_commands},
 	prelude::*,
 	utils::{
@@ -13,21 +17,21 @@ use serenity::{
 		Colour
 	}
 };
-use serde::{Deserialize};
-use serde_json::from_str;
-use isahc::prelude::*;
-use chrono::{Utc};
 
-pub mod toml; // discord settings
+use commands::{
+	servers::*,
+};
 
-thread_local!(static RAZI_CONFIG: RefCell<toml::RaziConfig> = RefCell::new(toml::RaziConfig::get_config()));
+use settings::toml::*;
+
+thread_local!(pub static RAZI_CONFIG: RefCell<RaziConfig> = RefCell::new(RaziConfig::get_config()));
 
 #[group]
 #[commands(info)]
 struct General;
 
 #[group]
-#[commands(server_request)]
+#[commands(server_status)]
 struct Api;
 
 struct Handler;
@@ -36,16 +40,92 @@ impl EventHandler for Handler {
 	fn ready(&self, _:Context, ready: Ready){
 		println!("{} is now connected!", ready.user.name);
 	}
+
+	fn guild_member_addition(&self, ctx: Context, _guild_id: GuildId, mut new_member: Member) {
+		// Currently dont care about guild ID, TODO tho i swear
+		let result = new_member.add_role(&ctx, RoleId(636085201461837834));
+		
+
+		let error = match result {
+			Ok(_) => {
+				false
+			}, 
+			Err(wtf) => {
+				print!("{}", wtf);
+				true
+			}
+		};
+
+		let _result = ChannelId(444912231176601600).send_message(&ctx.http, |m| {
+			m.embed(|e| {
+				e.colour(Colour::from_rgb(52, 235, 95));
+				
+				if error {
+					e.title("New user has joined and I have crapped my pants.");
+				} else {
+					e.title("New user has joined!");
+				}
+				
+				let url = new_member.user.read().avatar_url();
+				if url.is_some() {
+					e.thumbnail(url.unwrap());
+				} else {
+					e.thumbnail(new_member.user.read().default_avatar_url());
+				}
+
+				e.description(new_member.display_name());
+
+				e.fields(vec![
+					("Creation date (UTC)", format!("{}", new_member.user_id().created_at()), false),
+					("User mention for quick access", new_member.mention(), false),
+				]);
+				e
+			});
+			m
+		});
+	}
+
+	fn guild_member_removal(&self, ctx: Context, _guild: GuildId, user: User, _member_data_if_available: Option<Member>) {
+		let _result = ChannelId(444912231176601600).send_message(&ctx.http, |m| {
+			m.embed(|e| {
+				e.colour(Colour::from_rgb(230, 10, 10));
+				
+				e.title("User has left the game!");
+				
+				let url = user.avatar_url();
+				if url.is_some() {
+					e.thumbnail(url.unwrap());
+				} else {
+					e.thumbnail(user.default_avatar_url());
+				}
+
+				e.description(user.name);
+
+				e.fields(vec![
+					("Creation date (UTC)", format!("{}",user.id.created_at()), false),
+					("User mention for quick access", user.id.mention(), false),
+				]);
+				e
+			});
+			m
+		});
+	}
+
 }
 
 fn main() {
-	let mut config = toml::RaziConfig::new();
+	let mut config = RaziConfig::new();
 
 	RAZI_CONFIG.with(|cell| {
 		config = cell.borrow().clone();
 	});
+
+	let token: &String = match &config.discord.release_run {
+        true => &config.discord.release_token,
+        false => &config.discord.test_token,
+	};
 	
-	let mut client = Client::new(&config.discord.token, Handler).expect("Error creating client");
+	let mut client = Client::new(&token, Handler).expect("Error creating client");
 
 	let (owners, _) = match client.cache_and_http.http.get_current_application_info() { // get owner id for a few commands
         Ok(info) => {
@@ -77,7 +157,6 @@ fn main() {
 		.group(&GENERAL_GROUP)
 		.group(&API_GROUP)
 		.help(&MY_HELP)
-
 		
 	);
 
@@ -143,147 +222,3 @@ fn my_help(
     help_commands::with_embeds(context, msg, args, help_options, groups, owners)
 }
 
-
-#[command]
-#[help_available]
-#[aliases("s","server")]
-#[description("View server status, read pins to see current active list")]
-fn server_request(ctx: &mut Context, msg: &Message) -> CommandResult {
-
-	let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
-	
-	let mut config = toml::RaziConfig::new();
-
-	RAZI_CONFIG.with(|cell| {
-		config = cell.borrow().clone();
-	});
-
-	let server_list = config.kag_server;
-	let owner_list = config.discord.owners;
-
-	args.advance(); // skip to first arg
-	let first_arg:Option<String> = match args.single::<String>() {
-		Ok(passed_arg) => Some(passed_arg),
-		Err(failed_arg) => { 
-			print!("Passed arg error {}", failed_arg); 
-			None
-		}
-	};
-
-	if first_arg.is_none() {
-		msg.reply(&ctx, "Please pass a server name (check pins for current list of servers)")?;
-		return Ok(());
-	}
-
-	let first_arg = first_arg.unwrap().to_lowercase();
-	let mut ip = String::new();
-	let mut port = String::new();
-	let mut minimap = false;
-
-	for server in server_list {
-		let mut iter = server.names.iter();
-
-		let found: Option<&String> = iter.find(| &x | x.to_lowercase() == first_arg );
-
-		if found.is_some() {
-			ip =  String::from(server.ip.as_str()); // there's better ways to handle this, but good enough for now
-			port = String::from(server.port.as_str());
-			minimap = server.minimap;
-			break;
-		}
-	}
-
-	let ip = ip;
-	let port = port;
-	let minimap = minimap;
-
-	if ip.is_empty() { 
-		msg.reply(&ctx, "Server name not found, please check pins for current active list.")?;
-		return Ok(());
-	}
-
-	let is_owner = owner_list.into_iter().find(|x| x == msg.author.id.as_u64()).is_some();
-	let response = isahc::get(format!("https://api.kag2d.com/v1/game/thd/kag/server/{}/{}/status", &ip, &port));
-	if response.is_err() {
-		let err = response.err().unwrap();
-		println!("{}", &err);
-		if is_owner {
-			msg.reply(&ctx, format!("API get request error: {}", &err))?; 
-		}
-		return Ok(());
-	}
-
-	let server_json: Option<kag_server> = match from_str(&response.unwrap().text()?) {
-		Ok(result) => Some(result),
-		Err(errmsg) => {
-			println!("{}", &errmsg); 
-			if is_owner {
-				msg.reply(&ctx, format!("Json error: {}", &errmsg))?;
-			}
-			None
-		}
-	};
-
-	if server_json.is_none() {
-		return Ok(())
-	}
-	let server_json = server_json.unwrap();
-
-	// Message builder time
-	let server_name = server_json.serverStatus.name;
-	let player_count = server_json.serverStatus.currentPlayers;
-	let mut players = String::new();
-	
-	if &player_count == &0 {
-		players = String::from("No players currently in game");
-	} else {
-		for mut player in server_json.serverStatus.playerList {
-			player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default());		
-			players += format!("{}\n", player).as_str();
-		}
-	}
-
-	let result = msg.channel_id.send_message(&ctx.http, |m| {
-		m.embed(|e| {
-			e.colour(Colour::from_rgb(52, 235, 95));
-			e.title(server_name);
-			e.fields(vec![
-                ("Player count", format!("{}",player_count),false),
-                ("Players", players,false),
-			]);
-			
-			if minimap {
-				e.image(format!("https://api.kag2d.com/v1/game/thd/kag/server/{}/{}/minimap?{}", &ip, &port, Utc::now().timestamp()));
-			}
-			e
-		});
-		m
-	});
-
-	if result.is_err() {
-		let errmsg = result.err().unwrap();
-		println!("{}",errmsg);
-		return Ok(());
-	}
-
-	Ok(())
-}
-
-#[allow(non_snake_case, non_camel_case_types, dead_code)]
-#[derive(Deserialize)]
-struct kag_server{
-    serverStatus: status,
-}
-
-#[allow(non_snake_case, non_camel_case_types, dead_code)]
-#[derive(Deserialize)]
-struct status{
-    DNCycle: bool,
-    IPv4Address: String,
-    connectable: bool,
-    currentPlayers: i32,
-    lastUpdate: String,
-    name: String,
-    playerList: Vec<String>,
-    port: i32,
-}
