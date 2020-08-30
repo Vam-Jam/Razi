@@ -3,8 +3,8 @@ release_token = ""
 test_token = ""
 prefixes = [".", "~"]
 allowed_channels = []
-owners = []
-release_run = false  
+owners = [233738372814864395, 301370472594014218, 165600688590553088, 142300409002852352]
+release_run = true  
 
 [[kag_server]]
 names = ["tc"]
@@ -19,19 +19,13 @@ port = "50303"
 minimap = true
 
 [[kag_server]]
+names = ["kaww", "kaw", "warfare"]
+ip = "85.10.195.233"
+port = "50308"
+minimap = false
+
+[[kag_server]]
 names = ["wizard", "ww"]
 ip = "85.10.195.233"
 port = "50301"
-minimap = true
-
-[[kag_server]]
-names = ["lwb", "classes"]
-ip = "85.10.195.233"
-port = "50310"
-minimap = true
-
-[[kag_server]]
-names = ["volley", "vb", "volleyball"]
-ip = "85.10.195.233"
-port = "50302"
 minimap = true
