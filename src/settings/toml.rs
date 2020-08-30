@@ -1,11 +1,6 @@
+use serde::Deserialize;
+use std::{clone::Clone, default::Default, fs::File, io::prelude::Read};
 use toml::from_str;
-use serde::{Deserialize};
-use std::{
-	clone::Clone,
-	default::Default,
-	fs::File,
-	io::prelude::Read,
-};
 
 // shamelessly stolen from stackoverflow because i dont fully understand macro's
 macro_rules! pub_struct {
@@ -18,62 +13,63 @@ macro_rules! pub_struct {
 }
 
 pub_struct!(RaziConfig {
-	discord: Discord,
-	kag_server: Option<Vec<KagServer>>,
+    discord: Discord,
+    kag_server: Option<Vec<KagServer>>,
 });
 
 pub_struct!(Discord {
-	release_token: String,
-	test_token: String,
-	prefixes: Vec<String>,
-	allowed_channels: Vec<u64>,
-	owners: Vec<u64>,
-	release_run: bool,
+    release_token: String,
+    test_token: String,
+    prefixes: Vec<String>,
+    allowed_channels: Vec<u64>,
+    owners: Vec<u64>,
+    release_run: bool,
 });
 
 pub_struct!(KagServer {
-	names: Vec<String>,
-	ip: String,
-	port: String,
-	minimap: bool,
+    names: Vec<String>,
+    ip: String,
+    port: String,
+    minimap: bool,
 });
 
 impl RaziConfig {
-	pub fn new() -> RaziConfig {
-		RaziConfig::default()
-	}
-	
-	pub fn get_config() -> RaziConfig { // Get token from toml
-		RaziConfig::get_razi_config()
-	}
+    pub fn new() -> RaziConfig {
+        RaziConfig::default()
+    }
 
-	fn get_razi_config() -> RaziConfig {
-		let mut toml_file = match File::open("./Razi.toml") {
-			Ok(file) => file,
-			Err(_) => {
-				panic!("File could not be found");
-			}
-		};
+    pub fn get_config() -> RaziConfig {
+        // Get token from toml
+        RaziConfig::get_razi_config()
+    }
 
-		let mut config = String::new();
+    fn get_razi_config() -> RaziConfig {
+        let mut toml_file = match File::open("./Razi.toml") {
+            Ok(file) => file,
+            Err(_) => {
+                panic!("File could not be found");
+            }
+        };
 
-		match toml_file.read_to_string(&mut config) {
-			Ok(_) => (), 
-			Err(error) => panic!("File could not be read! {:?}", error),
-		}
+        let mut config = String::new();
 
-		let config: Option<RaziConfig> = match from_str(config.as_str()) {
-			Ok(login) => Some(login),
-			Err(error) => {
-				println!("Couldnt convert to toml! {:?}", error);
-				None
-			}
-		};
+        match toml_file.read_to_string(&mut config) {
+            Ok(_) => (),
+            Err(error) => panic!("File could not be read! {:?}", error),
+        }
 
-		if config.is_none() {
-			//panic!("Exiting due to toml conversion failure");
-		} 
+        let config: Option<RaziConfig> = match from_str(config.as_str()) {
+            Ok(login) => Some(login),
+            Err(error) => {
+                println!("Couldnt convert to toml! {:?}", error);
+                None
+            }
+        };
 
-		config.unwrap()
-	}
+        if config.is_none() {
+            //panic!("Exiting due to toml conversion failure");
+        }
+
+        config.unwrap()
+    }
 }
