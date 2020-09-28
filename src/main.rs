@@ -57,7 +57,7 @@ impl EventHandler for Handler {
                 .add_role(&ctx, RoleId(377203918557675530))
                 .expect("rip role");
             ChannelId(394522201589809173).send_message(&ctx.http, |m| {
-				m.content(format!("Hey {}! Your account is too new for us, so we have placed you in here.\nYou can talk here, an admin will let you out after you request.", new_member.mention()));
+				m.content(format!("Hey {}! Your account is too new for us, so we have placed you in here.\nYou can talk here, an admin may let you out after you request.", new_member.mention()));
 				m
 			}).expect("rip message");
 
