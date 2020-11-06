@@ -201,6 +201,7 @@ async fn main() {
         .event_handler(Handler)
         .framework(framework)
         .add_intent(GatewayIntents::GUILD_MEMBERS)
+        .add_intent(GatewayIntents::GUILD_MESSAGES)
         .await
         .expect("Error creating client!");
 
