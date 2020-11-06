@@ -37,10 +37,17 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     };
 
     if first_arg.is_none() {
-        msg.reply(
-            &ctx,
-            "Please pass a server name (check pins for current list of servers)",
-        ).await;
+        match msg
+            .reply(
+                &ctx,
+                "Please pass a server name (check pins for current list of servers)",
+            )
+            .await
+        {
+            Err(err) => println!("msg.reply error => {}", err),
+            _ => (),
+        };
+
         return Ok(());
     }
 
@@ -71,10 +78,16 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let minimap = minimap;
 
     if ip.is_empty() {
-        msg.reply(
-            &ctx,
-            "Server name not found, please check pins for current active list.",
-        ).await;
+        match msg
+            .reply(
+                &ctx,
+                "Server name not found, please check pins for current active list.",
+            )
+            .await
+        {
+            Err(err) => println!("msg.reply error => {}", err),
+            _ => (),
+        };
         return Ok(());
     }
 
@@ -88,7 +101,13 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
         let err = response.err().unwrap();
         println!("{}", &err);
         if is_owner {
-            msg.reply(&ctx, format!("API get request error: {}", &err)).await;
+            match msg
+                .reply(&ctx, format!("API get request error: {}", &err))
+                .await
+            {
+                Err(err) => println!("msg.reply error => {}", err),
+                _ => (),
+            };
         }
         return Ok(());
     }
@@ -98,7 +117,10 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
         Err(errmsg) => {
             println!("{}", &errmsg);
             if is_owner {
-                msg.reply(&ctx, format!("Json error: {}", &errmsg)).await;
+                match msg.reply(&ctx, format!("Json error: {}", &errmsg)).await {
+                    Err(err) => println!("msg.reply error => {}", err),
+                    _ => (),
+                };
             }
             None
         }
@@ -123,27 +145,30 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    let result = msg.channel_id.send_message(&ctx.http, |m| {
-        m.embed(|e| {
-            e.colour(Colour::from_rgb(52, 235, 95));
-            e.title(server_name);
-            e.fields(vec![
-                ("Player count", format!("{}", player_count), false),
-                ("Players", players, false),
-            ]);
+    let result = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.colour(Colour::from_rgb(52, 235, 95));
+                e.title(server_name);
+                e.fields(vec![
+                    ("Player count", format!("{}", player_count), false),
+                    ("Players", players, false),
+                ]);
 
-            if minimap {
-                e.image(format!(
-                    "https://api.kag2d.com/v1/game/thd/kag/server/{}/{}/minimap?{}",
-                    &ip,
-                    &port,
-                    Utc::now().timestamp()
-                ));
-            }
-            e
-        });
-        m
-    }).await;
+                if minimap {
+                    e.image(format!(
+                        "https://api.kag2d.com/v1/game/thd/kag/server/{}/{}/minimap?{}",
+                        &ip,
+                        &port,
+                        Utc::now().timestamp()
+                    ));
+                }
+                e
+            });
+            m
+        })
+        .await;
 
     if result.is_err() {
         let errmsg = result.err().unwrap();

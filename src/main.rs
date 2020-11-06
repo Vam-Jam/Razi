@@ -4,6 +4,7 @@ pub mod settings;
 use std::{cell::RefCell, collections::HashSet};
 
 use serenity::{
+    async_trait,
     client::bridge::gateway::GatewayIntents,
     framework::standard::{
         help_commands, macros::*, Args, CommandGroup, CommandResult, HelpOptions, StandardFramework,
@@ -17,7 +18,6 @@ use serenity::{
     },
     prelude::{Client, Context, EventHandler, Mentionable},
     utils::Colour,
-    async_trait,
 };
 
 use chrono::{Duration, Utc};
@@ -43,82 +43,89 @@ impl EventHandler for Handler {
         println!("{} is now connected!", ready.user.name);
     }
 
-    async fn guild_member_addition(&self, ctx: Context, guild_id: GuildId, new_member: Member) {
-        // Currently dont care about guild ID, TODO tho i swear
-        // TODO-> Error checks
-        println!("New member joined");
+    async fn guild_member_addition(&self, ctx: Context, _guild_id: GuildId, new_member: Member) {
+        let mut error = false; // this will get toggled to true if there's an error
+
         let mut new_member = new_member;
         let result = new_member.add_role(&ctx, RoleId(636085201461837834)).await;
 
         if result.is_err() {
-            println!("new_member error todo");
+            println!("new_member error {}", &result.err().unwrap());
+            error = true;
         }
 
         let gulag_date = Utc::now() - Duration::weeks(2);
 
         let gulaged = if new_member.user.id.created_at() > gulag_date {
-            new_member
-                .add_role(&ctx, RoleId(377203918557675530)).await;
-            ChannelId(394522201589809173).send_message(&ctx.http, |m| {
+            let result = new_member.add_role(&ctx, RoleId(377203918557675530)).await;
+
+            if result.is_err() {
+                println!("added role error {}", result.err().unwrap());
+                error = true;
+            }
+
+            let result = ChannelId(394522201589809173).send_message(&ctx.http, |m| {
 				m.content(format!("Hey {}! Your account is too new for us, so we have placed you in here.\nYou can talk here, an admin may let you out after you request.", new_member.mention()));
 				m
-			}).await;
+            }).await;
+
+            if result.is_err() {
+                println!("new user gulag message error {}", result.err().unwrap());
+                error = true;
+            }
 
             true
         } else {
             false
         };
 
-        let error = match result {
-            Ok(_) => false,
-            Err(wtf) => {
-                print!("{}", wtf);
-                true
-            }
-        };
+        let _result = ChannelId(444912231176601600)
+            .send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.colour(Colour::from_rgb(52, 235, 95));
 
-        let _result = ChannelId(444912231176601600).send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.colour(Colour::from_rgb(52, 235, 95));
+                    if error {
+                        e.title("New user has joined, Error in console");
+                    } else {
+                        e.title("New user has joined!");
+                    }
 
-                if error {
-                    e.title(
-                        "New user has joined, Error in console",
-                    );
-                } else {
-                    e.title("New user has joined!");
-                }
+                    let url = new_member.user.avatar_url();
+                    if url.is_some() {
+                        e.thumbnail(url.unwrap());
+                    } else {
+                        e.thumbnail(new_member.user.default_avatar_url());
+                    }
 
-                let url = new_member.user.avatar_url();
-                if url.is_some() {
-                    e.thumbnail(url.unwrap());
-                } else {
-                    e.thumbnail(new_member.user.default_avatar_url());
-                }
+                    e.description(new_member.display_name());
 
-                e.description(new_member.display_name());
+                    e.fields(vec![
+                        (
+                            "Creation date (UTC)",
+                            format!("{}", new_member.user.id.created_at()),
+                            false,
+                        ),
+                        ("User mention for quick access", new_member.mention(), false),
+                        (
+                            "Has user been gulaged",
+                            (if gulaged {
+                                "User has been gulaged for being under 2 weeks old"
+                            } else {
+                                "User has not been gulaged, account over 2 weeks old"
+                            })
+                            .to_string(),
+                            false,
+                        ),
+                    ]);
+                    e
+                });
+                m
+            })
+            .await;
 
-                e.fields(vec![
-                    (
-                        "Creation date (UTC)",
-                        format!("{}", new_member.user.id.created_at()),
-                        false,
-                    ),
-                    ("User mention for quick access", new_member.mention(), false),
-                    (
-                        "Has user been gulaged",
-                        (if gulaged {
-                            "User has been gulaged for being under 2 weeks old"
-                        } else {
-                            "User has not been gulaged, account over 2 weeks old"
-                        }).to_string(),
-                        false,
-                    ),
-                ]);
-                e
-            });
-            m
-        });
+        if _result.is_err() {
+            println!("{}", _result.err().unwrap());
+        }
     }
 
     async fn guild_member_removal(
@@ -180,7 +187,7 @@ async fn main() {
                     for owner in &config.discord.owners {
                         owners.insert(UserId(*owner));
                     }
-        
+
                     owners
                 })
                 .allowed_channels({
@@ -193,9 +200,9 @@ async fn main() {
                     allowed_channels
                 })
         })
-    .group(&GENERAL_GROUP)
-    .group(&API_GROUP)
-    .help(&MY_HELP);
+        .group(&GENERAL_GROUP)
+        .group(&API_GROUP)
+        .help(&MY_HELP);
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)
@@ -255,7 +262,6 @@ async fn info(ctx: &Context, msg: &Message) -> CommandResult {
 
     Ok(())
 }
-
 
 #[help]
 #[individual_command_tip = "Commands only work in bot area, excluding the help command.
