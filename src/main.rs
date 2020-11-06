@@ -135,32 +135,38 @@ impl EventHandler for Handler {
         user: User,
         _member_data_if_available: Option<Member>,
     ) {
-        let _result = ChannelId(444912231176601600).send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.colour(Colour::from_rgb(230, 10, 10));
+        let result = ChannelId(444912231176601600)
+            .send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.colour(Colour::from_rgb(230, 10, 10));
 
-                e.title("User has left the game!");
+                    e.title("User has left the game!");
 
-                if let Some(url) = user.avatar_url() {
-                    e.thumbnail(url);
-                } else {
-                    e.thumbnail(user.default_avatar_url());
-                }
+                    if let Some(url) = user.avatar_url() {
+                        e.thumbnail(url);
+                    } else {
+                        e.thumbnail(user.default_avatar_url());
+                    }
 
-                e.description(user.name);
+                    e.description(user.name);
 
-                e.fields(vec![
-                    (
-                        "Creation date (UTC)",
-                        format!("{}", user.id.created_at()),
-                        false,
-                    ),
-                    ("User mention for quick access", user.id.mention(), false),
-                ]);
-                e
-            });
-            m
-        });
+                    e.fields(vec![
+                        (
+                            "Creation date (UTC)",
+                            format!("{}", user.id.created_at()),
+                            false,
+                        ),
+                        ("User mention for quick access", user.id.mention(), false),
+                    ]);
+                    e
+                });
+                m
+            })
+            .await;
+
+        if result.is_err() {
+            println!("Message builder error => {}", result.err().unwrap());
+        }
     }
 }
 
