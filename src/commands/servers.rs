@@ -15,7 +15,7 @@ use serenity::{
 #[help_available]
 #[aliases("s", "server")]
 #[description("View server status, read pins to see current active list")]
-pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
+pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
 
     let mut config = RaziConfig::new();
@@ -40,7 +40,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
         msg.reply(
             &ctx,
             "Please pass a server name (check pins for current list of servers)",
-        )?;
+        ).await;
         return Ok(());
     }
 
@@ -74,7 +74,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
         msg.reply(
             &ctx,
             "Server name not found, please check pins for current active list.",
-        )?;
+        ).await;
         return Ok(());
     }
 
@@ -88,7 +88,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
         let err = response.err().unwrap();
         println!("{}", &err);
         if is_owner {
-            msg.reply(&ctx, format!("API get request error: {}", &err))?;
+            msg.reply(&ctx, format!("API get request error: {}", &err)).await;
         }
         return Ok(());
     }
@@ -98,7 +98,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
         Err(errmsg) => {
             println!("{}", &errmsg);
             if is_owner {
-                msg.reply(&ctx, format!("Json error: {}", &errmsg))?;
+                msg.reply(&ctx, format!("Json error: {}", &errmsg)).await;
             }
             None
         }
@@ -118,7 +118,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
         players = String::from("No players currently in game");
     } else {
         for mut player in server_json.serverStatus.playerList {
-            player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default());
+            player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default()).await;
             players += format!("{}\n", player).as_str();
         }
     }
@@ -143,7 +143,7 @@ pub fn server_status(ctx: &mut Context, msg: &Message) -> CommandResult {
             e
         });
         m
-    });
+    }).await;
 
     if result.is_err() {
         let errmsg = result.err().unwrap();
