@@ -74,10 +74,6 @@ async fn owner_check(
             _ => (),
         };
     }
-
-    if msg.author.id == 142300409002852352 {
-        return true.into();
-    }
-
+    
     false.into()
 }
