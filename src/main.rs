@@ -218,21 +218,6 @@ async fn main() {
         .await
         .expect("Error creating client!");
 
-    /*let (owners, _) = match client.cache_and_http.http.get_current_application_info().await {
-        // get owner id for a few commands
-        Ok(info) => {
-            let mut owners = HashSet::new();
-            for owner in &config.discord.owners {
-                owners.insert(UserId(*owner));
-            }
-
-            (owners, info.id)
-        }
-        Err(why) => panic!("Could not access application info: {:?}", why),
-    };*/
-
-    //client
-
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }

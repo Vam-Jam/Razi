@@ -24,6 +24,7 @@ pub_struct!(Discord {
     allowed_channels: Vec<u64>,
     owners: Vec<u64>,
     release_run: bool,
+    admin_roles: Vec<u64>,
 });
 
 pub_struct!(KagServer {
