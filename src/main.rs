@@ -21,6 +21,7 @@ use serenity::{
 };
 
 use chrono::{Duration, Utc};
+use commands::admins::*;
 use commands::servers::*;
 
 use settings::toml::*;
@@ -34,6 +35,10 @@ struct General;
 #[group]
 #[commands(server_status)]
 struct Api;
+
+#[group]
+#[commands(emergency)]
+struct Admin;
 
 struct Handler;
 
@@ -208,6 +213,7 @@ async fn main() {
         })
         .group(&GENERAL_GROUP)
         .group(&API_GROUP)
+        .group(&ADMIN_GROUP)
         .help(&MY_HELP);
 
     let mut client = Client::builder(&token)

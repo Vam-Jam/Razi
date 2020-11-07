@@ -1,9 +1,18 @@
 use crate::settings::toml::*;
 use crate::RAZI_CONFIG;
-use serenity::{framework::standard::CommandResult, model::channel::Message, prelude::Context};
+use serenity::{
+    framework::standard::{macros::command, CommandResult},
+    model::channel::Message,
+    prelude::Context,
+};
 use std::env::current_dir;
 use std::process::Command;
 
+#[command]
+#[help_available]
+#[aliases("emergency_do_not_use")]
+#[description("This is a command you are only suppose to use in an emergency.\nDO NOT USE THIS IF THIS IS NOT THE CASE")]
+#[allowed_roles("361262801387520000", "474289311206866944", "364040665149079564")]
 pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
     let mut config = RaziConfig::new();
 
