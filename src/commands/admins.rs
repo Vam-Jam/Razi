@@ -14,6 +14,7 @@ use std::process::Command;
 #[command]
 #[help_available]
 #[aliases("emergency_do_not_use")]
+#[only_in("guild")]
 #[description("This is a command you are only suppose to use in an emergency.\nLike when razi start's to come alive or something dumb.\n////DO NOT USE THIS IF THIS IS NOT THE CASE////")]
 #[checks("ADMIN")]
 pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
@@ -74,6 +75,6 @@ async fn owner_check(
             _ => (),
         };
     }
-    
+
     false.into()
 }
