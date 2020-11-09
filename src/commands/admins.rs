@@ -49,7 +49,7 @@ pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[check]
 #[name = "ADMIN"]
-async fn owner_check(
+async fn admin_check(
     ctx: &Context,
     msg: &Message,
     _: &mut Args,
