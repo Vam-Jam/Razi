@@ -31,10 +31,9 @@ minimap = true
 ```
 
 # Can I use it in my server?
-Go for it! Source code is here for anybody to use.<br>
-I'll add a guide on how to do it later on, feel free to message me if you dont understand how to set it up.
-<br>
+Go for it, however this bot will contain code thats aimed for my personal uses, this will cause issues for unrelated servers<br>
+I would recommend you steal the parts you like and use them in your own project.
 
 # Thank you notes:
-- Thank you to the serenity-rs team, they have helped me fix issues in the past.=
+- Thank you to the serenity-rs team, they have helped me fix issues in the past.
 - Caesar for making the picture
