@@ -45,32 +45,23 @@ impl RaziConfig {
     }
 
     fn get_razi_config() -> RaziConfig {
-        let mut toml_file = match File::open("./Razi.toml") {
-            Ok(file) => file,
-            Err(_) => {
-                panic!("File could not be found");
-            }
-        };
-
         let mut config = String::new();
 
-        match toml_file.read_to_string(&mut config) {
-            Ok(_) => (),
-            Err(error) => panic!("File could not be read! {:?}", error),
-        }
-
-        let config: Option<RaziConfig> = match from_str(config.as_str()) {
-            Ok(login) => Some(login),
-            Err(error) => {
-                println!("Couldnt convert to toml! {:?}", error);
-                None
+        let mut toml_file = match File::open("./Razi.toml") {
+            Ok(file) => file,
+            Err(err) => {
+                panic!("File could not be found {}", err);
             }
         };
 
-        if config.is_none() {
-            //panic!("Exiting due to toml conversion failure");
+        match toml_file.read_to_string(&mut config) {
+            Err(error) => panic!("File could not be read! {:?}", error),
+            _ => (),
         }
 
-        config.unwrap()
+        match from_str(config.as_str()) {
+            Ok(content) => content,
+            Err(error) => panic!("Couldnt convert to toml! {:?}", error),
+        }
     }
 }
