@@ -27,7 +27,7 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let first_arg: Option<String> = match args.single::<String>() {
         Ok(passed_arg) => Some(passed_arg),
         Err(failed_arg) => {
-            print!("Passed arg error {}", failed_arg);
+            println!("Passed arg error {}", failed_arg);
             None
         }
     };
