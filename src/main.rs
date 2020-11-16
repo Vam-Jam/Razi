@@ -70,8 +70,8 @@ impl EventHandler for Handler {
             }
 
             let result = ChannelId(394522201589809173).send_message(&ctx.http, |m| {
-				m.content(format!("Hey {}! Your account is too new for us, so we have placed you in here.\nYou can talk here, an admin may let you out after you request.", new_member.mention()));
-				m
+                m.content(format!("Hey {}! Your account is too new for us, so we have placed you in here.\nYou can talk here, an admin may let you out after you request.", new_member.mention()));
+                m
             }).await;
 
             if result.is_err() {
@@ -234,20 +234,20 @@ async fn main() {
 #[description("About me and source code")]
 async fn info(ctx: &Context, msg: &Message) -> CommandResult {
     let msg = msg.channel_id.send_message(&ctx.http, |m| {
-		m.embed(|e| {
-			e.title("Purpose of this bot");
-			e.description("Source code can be found here: <https://github.com/Vam-Jam/Razi>");
-			e.thumbnail("https://cdn.discordapp.com/attachments/551770125578010624/726435452525084672/hackerman.jpg");
-			e.fields(vec![
-				("Why another bot?", "bored lol", false),
-				("Why is it named Razi?", 
-					"Riza's source code kinda sucked, 0 error handling, and just general weird layout.\nRazi is just a better version of Riza\nThis bot however is being made ground up with ease of use.", false),
-				("Can i suggest stuff?", "Sure, ping me and ill add it to <https://trello.com/b/rdklywLp/razi> if i think its do-able and suitable", false),
-			]);
-			e
-		});
-		m
-	});
+        m.embed(|e| {
+            e.title("Purpose of this bot");
+            e.description("Source code can be found here: <https://github.com/Vam-Jam/Razi>");
+            e.thumbnail("https://cdn.discordapp.com/attachments/551770125578010624/726435452525084672/hackerman.jpg");
+            e.fields(vec![
+                ("Why another bot?", "bored lol", false),
+                ("Why is it named Razi?", 
+                    "Riza's source code kinda sucked, 0 error handling, and just general weird layout.\nRazi is just a better version of Riza\nThis bot however is being made ground up with ease of use.", false),
+                ("Can i suggest stuff?", "Sure, ping me and ill add it to <https://trello.com/b/rdklywLp/razi> if i think its do-able and suitable", false),
+            ]);
+            e
+        });
+        m
+    });
 
     if let Err(why) = msg.await {
         println!("Error sending info:\n{:?}", why);
