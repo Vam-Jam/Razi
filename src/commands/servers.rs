@@ -18,11 +18,7 @@ use serenity::{
 pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
 
-    let mut config = RaziConfig::new();
-
-    RAZI_CONFIG.with(|cell| {
-        config = cell.borrow().clone();
-    });
+    let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
 
     let server_list = config.kag_server;
     let owner_list = config.discord.owners;

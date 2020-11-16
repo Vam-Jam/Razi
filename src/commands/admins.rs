@@ -55,11 +55,7 @@ async fn admin_check(
     _: &mut Args,
     _: &CommandOptions,
 ) -> CheckResult {
-    let mut config = RaziConfig::new();
-
-    RAZI_CONFIG.with(|cell| {
-        config = cell.borrow().clone();
-    });
+    let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
 
     for admin_list in config.discord.admin_roles {
         match msg

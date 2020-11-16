@@ -177,11 +177,7 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    let mut config = RaziConfig::new();
-
-    RAZI_CONFIG.with(|cell| {
-        config = cell.borrow().clone();
-    });
+    let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
 
     let token: &String = match &config.discord.release_run {
         true => &config.discord.release_token,
