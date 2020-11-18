@@ -1,4 +1,3 @@
-use crate::settings::toml::*;
 use crate::RAZI_CONFIG;
 use chrono::Utc;
 use isahc::prelude::*;
@@ -88,10 +87,11 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     let is_owner = owner_list.into_iter().any(|x| &x == msg.author.id.as_u64());
-    let response = isahc::get(format!(
+    let response = isahc::get_async(format!(
         "https://api.kag2d.com/v1/game/thd/kag/server/{}/{}/status",
         &ip, &port
-    ));
+    ))
+    .await;
 
     if response.is_err() {
         let err = response.err().unwrap();

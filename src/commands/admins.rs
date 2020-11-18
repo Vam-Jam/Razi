@@ -1,4 +1,3 @@
-use crate::settings::toml::*;
 use crate::RAZI_CONFIG;
 use serenity::{
     framework::standard::{
@@ -44,7 +43,7 @@ pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
         .arg("now")
         .spawn()
         .expect("Luckily died on shutdown");
-        
+
     Ok(())
 }
 
