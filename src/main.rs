@@ -265,7 +265,7 @@ If you want more information about a specific command, just pass the command as 
 #[lacking_permissions = "Hide"]
 #[lacking_role = "Strike"]
 #[wrong_channel = "Hide"]
-#[no_help_available_text = "**Error**: Please use this command in bot area"]
+#[no_help_available_text = "**Error**: Command not found"]
 async fn my_help(
     context: &Context,
     msg: &Message,
