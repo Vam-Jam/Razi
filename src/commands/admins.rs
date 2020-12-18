@@ -58,7 +58,7 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
         _ => (),
 	}
 
-	Command::new("systemctl")
+	Command::new("/bin/systemctl")
         .arg("restart tc")
         .spawn()
         .expect("Failed on restating TC");
@@ -73,7 +73,7 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
 #[description("Restart WW")]
 #[checks("ADMIN")]
 pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
-	/*match msg
+	match msg
         .reply(
             &ctx.http,
             "Restarting WW",
@@ -82,9 +82,10 @@ pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
     {
         Err(err) => println!("Couldnt send reply message => {}", err),
         _ => (),
-	}*/
+	}
 
-	Command::new("systemctl")
+	Command::new("/bin/systemctl")
+        .arg("restart ww")
         .spawn()
         .expect("Failed on restating WW");
 	
