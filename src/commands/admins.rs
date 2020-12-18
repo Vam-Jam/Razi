@@ -66,6 +66,32 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
 	Ok(())
 }
 
+#[command]
+#[help_available]
+#[aliases("r_ww", "rww")]
+#[only_in("guild")]
+#[description("Restart WW")]
+#[checks("ADMIN")]
+pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
+	match msg
+        .reply(
+            &ctx.http,
+            "Restarting WW",
+        )
+        .await
+    {
+        Err(err) => println!("Couldnt send reply message => {}", err),
+        _ => (),
+	}
+
+	Command::new("systemctl")
+        .arg("restart ww")
+        .spawn()
+        .expect("Failed on restating WW");
+	
+	Ok(())
+}
+
 #[check]
 #[name = "ADMIN"]
 async fn admin_check(
