@@ -7,11 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serenity = "0.9.0"
-toml = "0.5.7"
-serde = { version = "1.0.117", features = ["derive"] }
-serde_json = "1.0.59"
-isahc = "0.9.13"
+serenity = "0.9.2"
+toml = "0.5.8"
+serde = { version = "1.0.118", features = ["derive"] }
+serde_json = "1.0.60"
+isahc = "0.9.14"
 chrono = "0.4.19"
 tokio = { version = "0.2", features = ["macros"] }
 

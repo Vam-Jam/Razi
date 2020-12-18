@@ -7,9 +7,9 @@ use serenity::{
     model::channel::Message,
     prelude::Context,
 };
-use std::env::current_dir;
 use std::process::Command;
 
+// This is just a command so i can restart the server when needed (and people find it funny every now and then)
 #[command]
 #[help_available]
 #[aliases("emergency_do_not_use")]
@@ -31,20 +31,39 @@ pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
         _ => (),
     }
 
-    // TODO: Uninstall Razi
-
-    Command::new("cargo")
-        .current_dir(current_dir().unwrap())
-        .arg("clean")
-        .spawn()
-        .expect("Luckily died on cargo clean");
-
     Command::new("shutdown")
         .arg("now")
         .spawn()
         .expect("Luckily died on shutdown");
 
     Ok(())
+}
+
+
+#[command]
+#[help_available]
+#[aliases("r_tc", "rtc")]
+#[only_in("guild")]
+#[description("Restart TC")]
+#[checks("ADMIN")]
+pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
+	match msg
+        .reply(
+            &ctx.http,
+            "Restarting TC",
+        )
+        .await
+    {
+        Err(err) => println!("Couldnt send reply message => {}", err),
+        _ => (),
+	}
+
+	Command::new("systemctl")
+        .arg("restart tc")
+        .spawn()
+        .expect("Failed on restating TC");
+	
+	Ok(())
 }
 
 #[check]
