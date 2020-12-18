@@ -59,7 +59,8 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
 	}
 
 	Command::new("/bin/systemctl")
-        .arg("restart tc")
+		.arg("restart")
+		.arg("tc")
         .spawn()
         .expect("Failed on restating TC");
 	
@@ -85,7 +86,8 @@ pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
 	}
 
 	Command::new("/bin/systemctl")
-        .arg("restart ww")
+		.arg("restart")
+		.arg("ww")
         .spawn()
         .expect("Failed on restating WW");
 	
