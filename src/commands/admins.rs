@@ -94,6 +94,33 @@ pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
 	Ok(())
 }
 
+#[command]
+#[help_available]
+#[aliases("r_mbu", "rmbu")]
+#[only_in("guild")]
+#[description("Restart MBU")]
+#[checks("ADMIN")]
+pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
+	match msg
+        .reply(
+            &ctx.http,
+            "Restarting MBU",
+        )
+        .await
+    {
+        Err(err) => println!("Couldnt send reply message => {}", err),
+        _ => (),
+	}
+
+	Command::new("/bin/systemctl")
+		.arg("restart")
+		.arg("mbu")
+        .spawn()
+        .expect("Failed on restating MBU");
+	
+	Ok(())
+}
+
 #[check]
 #[name = "ADMIN"]
 async fn admin_check(
