@@ -100,7 +100,7 @@ pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
 #[only_in("guild")]
 #[description("Restart MBU")]
 #[checks("ADMIN")]
-pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
+pub async fn restart_mbu(ctx: &Context, msg: &Message) -> CommandResult {
 	match msg
         .reply(
             &ctx.http,
