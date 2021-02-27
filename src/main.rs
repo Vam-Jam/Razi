@@ -44,14 +44,18 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, _ctx: Context, ready: Ready) {
         println!("{} is now connected!", ready.user.name);
     }
 
-    async fn guild_member_addition(&self, ctx: Context, _guild_id: GuildId, new_member: Member) {
+    async fn guild_member_addition(
+        &self,
+        ctx: Context,
+        _guild_id: GuildId,
+        mut new_member: Member,
+    ) {
         let mut error = false; // this will get toggled to true if there's an error
 
-        let mut new_member = new_member;
         let result = new_member.add_role(&ctx, RoleId(636085201461837834)).await;
 
         if result.is_err() {
@@ -95,9 +99,8 @@ impl EventHandler for Handler {
                         e.title("New user has joined!");
                     }
 
-                    let url = new_member.user.avatar_url();
-                    if url.is_some() {
-                        e.thumbnail(url.unwrap());
+                    if let Some(url) = new_member.user.avatar_url() {
+                        e.thumbnail(url);
                     } else {
                         e.thumbnail(new_member.user.default_avatar_url());
                     }
@@ -110,7 +113,11 @@ impl EventHandler for Handler {
                             format!("{}", new_member.user.id.created_at()),
                             false,
                         ),
-                        ("User mention for quick access", new_member.mention(), false),
+                        (
+                            "User mention for quick access",
+                            format!("{}", new_member.mention()),
+                            false,
+                        ),
                         (
                             "Has user been gulaged",
                             (if gulaged {
@@ -161,7 +168,11 @@ impl EventHandler for Handler {
                             format!("{}", user.id.created_at()),
                             false,
                         ),
-                        ("User mention for quick access", user.id.mention(), false),
+                        (
+                            "User mention for quick access",
+                            format!("{}", user.id.mention()),
+                            false,
+                        ),
                     ]);
                     e
                 });
@@ -215,8 +226,7 @@ async fn main() {
     let mut client = Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)
-        .add_intent(GatewayIntents::GUILD_MEMBERS)
-        .add_intent(GatewayIntents::GUILD_MESSAGES)
+        .intents(GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_MESSAGES)
         .await
         .expect("Error creating client!");
 

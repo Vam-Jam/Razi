@@ -32,16 +32,15 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     };
 
     if first_arg.is_none() {
-        match msg
+        if let Err(err) = msg
             .reply(
                 &ctx,
                 "Please pass a server name (check pins for current list of servers)",
             )
             .await
         {
-            Err(err) => println!("msg.reply error => {}", err),
-            _ => (),
-        };
+            println!("msg.reply error => {}", err)
+        }
 
         return Ok(());
     }
@@ -73,16 +72,15 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let minimap = minimap;
 
     if ip.is_empty() {
-        match msg
+        if let Err(err) = msg
             .reply(
                 &ctx,
                 "Server name not found, please check pins for current active list.",
             )
             .await
         {
-            Err(err) => println!("msg.reply error => {}", err),
-            _ => (),
-        };
+            println!("msg.reply error => {}", err)
+        }
         return Ok(());
     }
 
@@ -97,26 +95,24 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
         let err = response.err().unwrap();
         println!("{}", &err);
         if is_owner {
-            match msg
-                .reply(&ctx, format!("API get request error: {}", &err))
+            if let Err(msg_err) = msg
+                .reply(&ctx, format!("API get request error: {}", err))
                 .await
             {
-                Err(err) => println!("msg.reply error => {}", err),
-                _ => (),
-            };
+                println!("msg.reply error => {}", msg_err)
+            }
         }
         return Ok(());
     }
 
-    let server_json: Option<kag_server> = match from_str(&response.unwrap().text()?) {
+    let server_json: Option<kag_server> = match from_str(&response.unwrap().text().await?) {
         Ok(result) => Some(result),
         Err(errmsg) => {
             println!("{}", &errmsg);
             if is_owner {
-                match msg.reply(&ctx, format!("Json error: {}", &errmsg)).await {
-                    Err(err) => println!("msg.reply error => {}", err),
-                    _ => (),
-                };
+                if let Err(msg_err) = msg.reply(&ctx, format!("Json error: {}", &errmsg)).await {
+                    println!("msg.reply error => {}", msg_err)
+                }
             }
             None
         }

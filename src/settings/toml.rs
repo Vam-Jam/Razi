@@ -54,9 +54,8 @@ impl RaziConfig {
             }
         };
 
-        match toml_file.read_to_string(&mut config) {
-            Err(error) => panic!("File could not be read! {:?}", error),
-            _ => (),
+        if let Err(error) = toml_file.read_to_string(&mut config) {
+            panic!("File could not be read! {:?}", error)
         }
 
         match from_str(config.as_str()) {

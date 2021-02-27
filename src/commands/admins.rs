@@ -2,7 +2,7 @@ use crate::RAZI_CONFIG;
 use serenity::{
     framework::standard::{
         macros::{check, command},
-        Args, CheckResult, CommandOptions, CommandResult,
+        Args, CommandOptions, CommandResult, Reason,
     },
     model::channel::Message,
     prelude::Context,
@@ -17,18 +17,14 @@ use std::process::Command;
 #[description("This is a command you are only suppose to use in an emergency.\nLike when razi start's to come alive or something dumb.\n////DO NOT USE THIS IF THIS IS NOT THE CASE////")]
 #[checks("ADMIN")]
 pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
-    match msg
+    if let Err(err) = msg
         .reply(
             &ctx.http,
             "Well, you did the command you probably shouldn't have done. Goodbye",
         )
         .await
     {
-        Err(err) => {
-            println!("Couldnt send reply message => {}", err);
-            return Ok(()); // return because they didnt get to see the message >:(
-        }
-        _ => (),
+        println!("Could not send reply message => {}", err);
     }
 
     Command::new("shutdown")
@@ -39,7 +35,6 @@ pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-
 #[command]
 #[help_available]
 #[aliases("r_tc", "rtc")]
@@ -47,24 +42,17 @@ pub async fn emergency(ctx: &Context, msg: &Message) -> CommandResult {
 #[description("Restart TC")]
 #[checks("ADMIN")]
 pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
-	match msg
-        .reply(
-            &ctx.http,
-            "Restarting TC",
-        )
-        .await
-    {
-        Err(err) => println!("Couldnt send reply message => {}", err),
-        _ => (),
-	}
+    if let Err(err) = msg.reply(&ctx.http, "Restarting TC").await {
+        println!("Couldnt send reply message => {}", err)
+    }
 
-	Command::new("/bin/systemctl")
-		.arg("restart")
-		.arg("tc")
+    Command::new("/bin/systemctl")
+        .arg("restart")
+        .arg("tc")
         .spawn()
         .expect("Failed on restating TC");
-	
-	Ok(())
+
+    Ok(())
 }
 
 #[command]
@@ -74,24 +62,17 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
 #[description("Restart WW")]
 #[checks("ADMIN")]
 pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
-	match msg
-        .reply(
-            &ctx.http,
-            "Restarting WW",
-        )
-        .await
-    {
-        Err(err) => println!("Couldnt send reply message => {}", err),
-        _ => (),
-	}
+    if let Err(err) = msg.reply(&ctx.http, "Restarting WW").await {
+        println!("Couldnt send reply message => {}", err)
+    }
 
-	Command::new("/bin/systemctl")
-		.arg("restart")
-		.arg("ww")
+    Command::new("/bin/systemctl")
+        .arg("restart")
+        .arg("ww")
         .spawn()
         .expect("Failed on restating WW");
-	
-	Ok(())
+
+    Ok(())
 }
 
 #[command]
@@ -101,24 +82,17 @@ pub async fn restart_ww(ctx: &Context, msg: &Message) -> CommandResult {
 #[description("Restart MBU")]
 #[checks("ADMIN")]
 pub async fn restart_mbu(ctx: &Context, msg: &Message) -> CommandResult {
-	match msg
-        .reply(
-            &ctx.http,
-            "Restarting MBU",
-        )
-        .await
-    {
-        Err(err) => println!("Couldnt send reply message => {}", err),
-        _ => (),
-	}
+    if let Err(err) = msg.reply(&ctx.http, "Restarting MBU").await {
+        println!("Couldnt send reply message => {}", err)
+    }
 
-	Command::new("/bin/systemctl")
-		.arg("restart")
-		.arg("mbu")
+    Command::new("/bin/systemctl")
+        .arg("restart")
+        .arg("mbu")
         .spawn()
         .expect("Failed on restating MBU");
-	
-	Ok(())
+
+    Ok(())
 }
 
 #[check]
@@ -128,23 +102,19 @@ async fn admin_check(
     msg: &Message,
     _: &mut Args,
     _: &CommandOptions,
-) -> CheckResult {
+) -> Result<(), Reason> {
     let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
 
     for admin_list in config.discord.admin_roles {
-        match msg
+        if msg
             .author
             .has_role(ctx, msg.guild_id.unwrap(), admin_list)
             .await
+            .is_ok()
         {
-            Ok(result) => {
-                if result {
-                    return true.into();
-                }
-            }
-            _ => (),
-        };
+            return Ok(());
+        }
     }
 
-    false.into()
+    Err(Reason::Unknown)
 }
