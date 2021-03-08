@@ -105,7 +105,7 @@ pub async fn restart_mbu(ctx: &Context, msg: &Message) -> CommandResult {
 #[description("Force update vintage story")]
 #[checks("ADMIN")]
 pub async fn update_vintage(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
+    /*let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
 
     if args.is_empty() || config.vintage_server.is_none() {
         return Ok(());
@@ -182,7 +182,7 @@ pub async fn update_vintage(ctx: &Context, msg: &Message, mut args: Args) -> Com
 
     if let Err(err) = msg.reply(&ctx.http, "Auto update complete").await {
         println!("Couldnt send reply message => {}", err)
-    }
+    }*/
 
     Ok(())
 }
