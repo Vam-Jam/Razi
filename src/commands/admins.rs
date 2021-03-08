@@ -7,7 +7,9 @@ use serenity::{
     model::channel::Message,
     prelude::Context,
 };
-use std::process::Command;
+
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 // This is just a command so i can restart the server when needed (and people find it funny every now and then)
 #[command]
@@ -91,6 +93,84 @@ pub async fn restart_mbu(ctx: &Context, msg: &Message) -> CommandResult {
         .arg("mbu")
         .spawn()
         .expect("Failed on restating MBU");
+
+    Ok(())
+}
+
+#[command]
+#[help_available]
+#[aliases("u_vs", "uvs")]
+#[only_in("guild")]
+#[description("Force update vintage story")]
+#[checks("ADMIN")]
+pub async fn update_vintage(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let config = RAZI_CONFIG.with(|cell| cell.borrow().to_owned());
+
+    if args.is_empty() || config.vintage_server.is_none() {
+        return Ok(());
+    }
+
+    // We only want the ending of the url
+    let mut url_path = args.single::<String>().unwrap();
+
+    // lol, maybe lets improve that later
+    if url_path.contains("http") || url_path.contains("::") {
+        if let Err(err) = msg
+            .reply(&ctx.http, "Please do not send any custom urls!")
+            .await
+        {
+            println!("Couldnt send reply message => {}", err)
+        }
+
+        return Ok(());
+    }
+
+    if url_path.starts_with('|') {
+        url_path = url_path
+            .chars()
+            .next()
+            .map(|c| &url_path[c.len_utf8()..])
+            .unwrap()
+            .to_string();
+    }
+
+    let wget_path = format!("wget https://cdn.vintagestory.at/gamefiles/{}", url_path);
+    let bash_file = format!("bash {}", config.vintage_server.unwrap().bash_filename);
+
+    // TODO: Clean up, extremely ugly/hacky, such is late night coding with lack of sleep
+    let mut cmd = Command::new("/bin/su")
+        .arg("-")
+        .arg("jenny")
+        .stdin(Stdio::piped())
+        .spawn()
+        .expect("Could not su as Jenny");
+
+    {
+        let stdin = cmd.stdin.as_mut().expect("Failed to get stdin");
+        stdin.write_all(b"tmux attach").expect("Failed to write");
+        stdin
+            .write_all(b"AUTOMATED SHUTDOWN, UPDATING!")
+            .expect("Failed to write");
+        stdin.write_all(b"/stop").expect("Failed to write");
+        stdin
+            .write_all(wget_path.as_bytes())
+            .expect("Failed to write");
+        stdin
+            .write_all(b"tar xzf vs_server_*.*.*.tar.gz")
+            .expect("Failed to write");
+        stdin
+            .write_all(b"rm vs_server_*.*.*.tar.gz")
+            .expect("Failed to write");
+        stdin
+            .write_all(bash_file.as_bytes())
+            .expect("Failed to write");
+    }
+
+    cmd.kill().expect("Could not kill command");
+
+    if let Err(err) = msg.reply(&ctx.http, "Auto update complete").await {
+        println!("Couldnt send reply message => {}", err)
+    }
 
     Ok(())
 }

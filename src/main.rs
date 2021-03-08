@@ -37,7 +37,7 @@ struct General;
 struct Api;
 
 #[group]
-#[commands(emergency, restart_tc, restart_ww, restart_mbu)]
+#[commands(emergency, restart_tc, restart_ww, restart_mbu, update_vintage)]
 struct Admin;
 
 struct Handler;

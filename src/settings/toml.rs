@@ -15,6 +15,7 @@ macro_rules! pub_struct {
 pub_struct!(RaziConfig {
     discord: Discord,
     kag_server: Option<Vec<KagServer>>,
+    vintage_server: Option<VintageStory>,
 });
 
 pub_struct!(Discord {
@@ -32,6 +33,11 @@ pub_struct!(KagServer {
     ip: String,
     port: String,
     minimap: bool,
+});
+
+pub_struct!(VintageStory {
+    file_path: String,
+    bash_filename: String,
 });
 
 impl RaziConfig {
