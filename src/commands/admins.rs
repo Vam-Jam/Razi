@@ -7,9 +7,10 @@ use serenity::{
     model::channel::Message,
     prelude::Context,
 };
+use tokio::time::sleep;
 
-use std::io::Write;
 use std::process::{Command, Stdio};
+use std::{io::Write, time::Duration};
 
 // This is just a command so i can restart the server when needed (and people find it funny every now and then)
 #[command]
@@ -148,25 +149,36 @@ pub async fn update_vintage(ctx: &Context, msg: &Message, mut args: Args) -> Com
     {
         let stdin = cmd.stdin.as_mut().expect("Failed to get stdin");
         stdin.write_all(b"tmux attach").expect("Failed to write");
+        sleep(Duration::from_millis(100)).await;
+
         stdin
             .write_all(b"AUTOMATED SHUTDOWN, UPDATING!")
             .expect("Failed to write");
+        sleep(Duration::from_millis(500)).await;
+
         stdin.write_all(b"/stop").expect("Failed to write");
+        sleep(Duration::from_millis(500)).await;
+
         stdin
             .write_all(wget_path.as_bytes())
             .expect("Failed to write");
+        sleep(Duration::from_millis(1000)).await;
+
         stdin
             .write_all(b"tar xzf vs_server_*.*.*.tar.gz")
             .expect("Failed to write");
+        sleep(Duration::from_millis(100)).await;
+
         stdin
             .write_all(b"rm vs_server_*.*.*.tar.gz")
             .expect("Failed to write");
+        sleep(Duration::from_millis(100)).await;
+
         stdin
             .write_all(bash_file.as_bytes())
             .expect("Failed to write");
+        sleep(Duration::from_millis(100)).await;
     }
-
-    cmd.kill().expect("Could not kill command");
 
     if let Err(err) = msg.reply(&ctx.http, "Auto update complete").await {
         println!("Couldnt send reply message => {}", err)
