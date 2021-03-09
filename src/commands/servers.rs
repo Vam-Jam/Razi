@@ -109,11 +109,9 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
         Ok(result) => Some(result),
         Err(errmsg) => {
             println!("{}", &errmsg);
-            if is_owner {
-                if let Err(msg_err) = msg.reply(&ctx, format!("Json error: {}", &errmsg)).await {
-                    println!("msg.reply error => {}", msg_err)
-                }
-            }
+			if let Err(msg_err) = msg.reply(&ctx, "Server is down, please check again later.").await {
+				println!("msg.reply error => {}", msg_err)
+			}
             None
         }
     };
@@ -121,6 +119,7 @@ pub async fn server_status(ctx: &Context, msg: &Message) -> CommandResult {
     if server_json.is_none() {
         return Ok(());
     }
+	
     let server_json = server_json.unwrap();
 
     // Message builder time
