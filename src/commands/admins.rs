@@ -202,7 +202,7 @@ async fn admin_check(
             .author
             .has_role(ctx, msg.guild_id.unwrap(), admin_list)
             .await
-            .is_ok()
+            .unwrap()
         {
             return Ok(());
         }
