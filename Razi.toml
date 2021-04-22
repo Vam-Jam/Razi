@@ -1,32 +1,14 @@
 [discord]
 release_token = ""
-test_token = ""
+test_token = "NTc0OTQ3OTg2MzEzMDUyMTYx.XNA0CQ.xFCx_FbgykbgIhlWQE31JfgW7Lw"
 prefixes = [".", "~"]
 allowed_channels = []
 owners = [233738372814864395, 301370472594014218, 165600688590553088, 142300409002852352]
-release_run = true  
+release_run = false
 admin_roles = [361262801387520000, 474289311206866944, 364040665149079564]
 
 [[kag_server]]
 names = ["tc"]
 ip = "85.10.195.233"
 port = "50309"
-minimap = true
-
-[[kag_server]]
-names = ["mc", "3d", "goldenguy"]
-ip = "85.10.195.233"
-port = "50303"
-minimap = true
-
-[[kag_server]]
-names = ["kaww", "kaw", "warfare"]
-ip = "85.10.195.233"
-port = "50308"
-minimap = false
-
-[[kag_server]]
-names = ["wizard", "ww"]
-ip = "85.10.195.233"
-port = "50301"
 minimap = true

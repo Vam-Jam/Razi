@@ -1,2 +1,1 @@
-pub mod admins;
-pub mod servers;
+pub mod basic;
