@@ -5,6 +5,7 @@ use serenity::prelude::*;
 use crate::razi_toml::Config;
 
 #[command]
+#[owners_only]
 async fn reload_config(ctx: &Context, msg: &Message) -> CommandResult {
     let config_lock = {
         let data_read = ctx.data.read().await;
