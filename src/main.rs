@@ -14,11 +14,12 @@ use tokio::sync::RwLock;
 use std::sync::Arc;
 
 use commands::basic::*;
+use commands::server::*;
 
 use razi_toml::Config;
 
 #[group]
-#[commands(ping, reload_config)]
+#[commands(ping, reload_config, kag_server_stats)]
 struct General;
 
 struct Handler;
@@ -38,11 +39,11 @@ async fn main() {
         .configure(|c| {
             c.owners({
                 let mut owners = HashSet::new();
-                
+
                 if let Some(owner_list) = owners_list {
                     for owner in owner_list {
                         owners.insert(UserId(*owner));
-                    }   
+                    }
                 }
 
                 owners
@@ -61,7 +62,6 @@ async fn main() {
             })
         })
         .group(&GENERAL_GROUP);
-
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)

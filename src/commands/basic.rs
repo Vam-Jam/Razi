@@ -18,7 +18,7 @@ async fn reload_config(ctx: &Context, msg: &Message) -> CommandResult {
     };
 
     {
-        let config = config_lock.write().await;
+        let mut config = config_lock.write().await;
 
         config.load_config();
     }

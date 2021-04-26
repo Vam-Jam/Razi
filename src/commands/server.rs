@@ -1,0 +1,198 @@
+use crate::{
+    commands::server,
+    razi_toml::{Config, KagServer},
+};
+
+use chrono::Utc;
+use isahc::{AsyncReadResponseExt, Response};
+use serde::Deserialize;
+use serde_json::from_str as convert_from_str;
+use serenity::{
+    framework::standard::{macros::command, Args, Command, CommandResult, Delimiter},
+    model::channel::Message,
+    prelude::Context,
+    utils::{content_safe, Colour, ContentSafeOptions},
+};
+
+#[command]
+pub async fn kag_server_stats(ctx: &Context, msg: &Message) -> CommandResult {
+    let config_lock = {
+        let data_read = ctx.data.read().await;
+
+        // Only thing cloned here is the reference
+        data_read
+            .get::<Config>()
+            .expect("Expecting config in client data")
+            .clone()
+    };
+
+    let server_config: Vec<KagServer>;
+
+    {
+        let config = config_lock.read().await;
+        let server = config.kag_servers.clone();
+
+        server_config = server.unwrap_or_default();
+    }
+
+    if server_config.len() == 0 {
+        msg.reply(ctx, "No server's in config file.").await?;
+        return Ok(());
+    }
+
+    let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
+
+    if args.len() < 2 {
+        msg.reply(ctx, "Command does not have enough arguments")
+            .await?;
+        return Ok(());
+    }
+
+    args.advance(); // Args include's the initial command text, so we need to skip that
+
+    // Wont panic since we already know length will be > 1
+    let first_arg = args.current().unwrap().to_lowercase();
+
+    let mut server_to_query: Option<KagServer> = None;
+
+    for server in server_config {
+        if server.name == first_arg {
+            server_to_query = Some(server);
+            break;
+        }
+
+        if let Some(aliases) = &server.aliases {
+            for alias in aliases {
+                if alias == &first_arg {
+                    server_to_query = Some(server);
+                    break;
+                }
+            }
+        }
+    }
+
+    if server_to_query.is_none() {
+        msg.reply(ctx, "Could not find the server you requested.")
+            .await?;
+        return Ok(());
+    }
+
+    let server_to_query = server_to_query.unwrap();
+
+    // Let the user know (and edit it once message has been recieved);
+    let mut userfeedback = msg.reply(ctx, "Requesting from kag api now...").await?;
+
+    let response = isahc::get_async(format!(
+        "https://api.kag2d.com/v1/game/thd/kag/server/{}/status",
+        &server_to_query.address
+    ))
+    .await;
+
+    let json_text = match response {
+        Ok(mut reply) => reply.text().await?,
+        Err(error) => {
+            userfeedback
+                .edit(ctx, |f| {
+                    f.content("Error getting response from api.kag2d.com. This has been logged internally.");
+                    f
+                })
+                .await?;
+            println!("User args: {}\nError: {}", msg.content, error);
+            return Ok(());
+        }
+    };
+
+    let json: json_kag = match convert_from_str(&json_text) {
+        Ok(result) => result,
+        Err(error) => {
+            userfeedback
+                .edit(ctx, |f| {
+                    f.content("Error converting json to object. This has been logged internally.");
+                    f
+                })
+                .await?;
+            println!("User args: {}\nError: {}", msg.content, error);
+            return Ok(());
+        }
+    };
+
+    let player_count = json.serverStatus.currentPlayers;
+    let name = json.serverStatus.name;
+    let mut players = String::new();
+
+    if player_count == 0 {
+        players = String::from("No players currently in game");
+    } else {
+        for mut player in json.serverStatus.playerList {
+            // Sanatize player names for discord
+            player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default()).await;
+
+            player = player.replace("_", r"\_");
+            player = player.replace("*", r"\*");
+            player = player.replace("~", r"\~");
+
+            players += format!("{}\n", player).as_str();
+        }
+    }
+
+    // We have to send a new message otherwise discord wont embed image >:(
+    let result = msg
+        .channel_id
+        .send_message(ctx, |f| {
+            f.embed(|e| {
+                e.color(Colour::from_rgb(52, 235, 95));
+                e.title(name);
+                e.fields(vec![
+                    ("Player count", format!("{}", player_count), false),
+                    ("Players", players, false),
+                ]);
+                if server_to_query.minimap {
+                    e.image(format!(
+                        "https://api.kag2d.com/v1/game/thd/kag/server/{}/minimap?{}",
+                        &server_to_query.address,
+                        Utc::now().timestamp()
+                    ));
+                }
+                e
+            });
+            f
+        })
+        .await;
+
+    if let Err(error) = result {
+        // Attempt to edit our last message
+        userfeedback
+            .edit(ctx, |f| {
+                f.content("Sending embed failed. This has been logged internally.");
+                f
+            })
+            .await?;
+        println!("Embed error: {}", error);
+        return Ok(());
+    } else {
+        userfeedback.delete(ctx).await?;
+    }
+
+    Ok(())
+}
+
+/// api.kag2d.com's json formatted struct
+
+#[allow(non_snake_case, non_camel_case_types, dead_code)]
+#[derive(Deserialize)]
+struct json_kag {
+    serverStatus: status,
+}
+
+#[allow(non_snake_case, non_camel_case_types, dead_code)]
+#[derive(Deserialize)]
+struct status {
+    DNCycle: bool,
+    IPv4Address: String,
+    connectable: bool,
+    currentPlayers: i32,
+    lastUpdate: String,
+    name: String,
+    playerList: Vec<String>,
+    port: i32,
+}
