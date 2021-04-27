@@ -1,6 +1,4 @@
-use crate::{
-    razi_toml::{Config, Discord},
-};
+use crate::razi_toml::{Config, Discord};
 use serenity::{
     framework::standard::{
         macros::{check, command},
@@ -10,7 +8,7 @@ use serenity::{
     prelude::Context,
 };
 
-use std::process::{Command as cmd};
+use std::process::Command as cmd;
 
 #[command]
 #[help_available]

@@ -1,16 +1,11 @@
-use crate::{
-    razi_toml::{Config, KagServer},
-};
+use crate::razi_toml::{Config, KagServer};
 
 use chrono::Utc;
 use isahc::AsyncReadResponseExt;
 use serde::Deserialize;
 use serde_json::from_str as convert_from_str;
 use serenity::{
-    framework::standard::{
-        macros::command,
-        Args, CommandResult, Delimiter,
-    },
+    framework::standard::{macros::command, Args, CommandResult, Delimiter},
     model::channel::Message,
     prelude::Context,
     utils::{content_safe, Colour, ContentSafeOptions},
