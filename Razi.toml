@@ -1,5 +1,5 @@
 [discord]
-token = "Some discord token"
+token = "Some token that i totally didnt leak in the past"
 prefix = "~"
 bot_channels = []
 owners = [233738372814864395, 301370472594014218, 165600688590553088, 142300409002852352]
