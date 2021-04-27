@@ -11,7 +11,7 @@ pub struct Config {
     pub kag_servers: Option<Vec<KagServer>>,
 }
 
-#[derive(Deserialize, Default, Debug)]
+#[derive(Deserialize, Default, Clone, Debug)]
 pub struct Discord {
     pub token: String,
     pub prefix: String,

@@ -3,9 +3,16 @@ mod razi_toml;
 
 use serenity::{
     async_trait,
-    client::{bridge::gateway::GatewayIntents, Client, EventHandler},
-    framework::standard::{macros::group, StandardFramework},
-    model::id::{ChannelId, UserId},
+    client::{bridge::gateway::GatewayIntents, Client, Context, EventHandler},
+    framework::standard::{
+        help_commands,
+        macros::{group, help},
+        Args, CommandGroup, CommandResult, HelpOptions, StandardFramework,
+    },
+    model::{
+        channel::Message,
+        id::{ChannelId, UserId}
+    },
 };
 use std::collections::HashSet;
 
@@ -13,14 +20,21 @@ use tokio::sync::RwLock;
 
 use std::sync::Arc;
 
-use commands::basic::*;
-use commands::server::*;
+use commands::{admin::*, basic::*, server::*};
 
 use razi_toml::Config;
 
 #[group]
-#[commands(ping, reload_config, kag_server_stats)]
+#[commands(ping, reload_config)]
 struct General;
+
+#[group]
+#[commands(kag_server_status)]
+struct Server;
+
+#[group]
+#[commands(restart_tc)]
+struct Admin;
 
 struct Handler;
 
@@ -61,7 +75,10 @@ async fn main() {
                 allowed_channels
             })
         })
-        .group(&GENERAL_GROUP);
+        .group(&GENERAL_GROUP)
+        .group(&SERVER_GROUP)
+        .group(&ADMIN_GROUP)
+        .help(&MY_HELP);
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)
@@ -79,4 +96,26 @@ async fn main() {
     if let Err(why) = client.start().await {
         println!("An error occurred while running the client: {:?}", why);
     }
+}
+
+#[help]
+#[individual_command_tip = "Commands only work in bot area, excluding the help command.
+If you want more information about a specific command, just pass the command as argument."]
+#[command_not_found_text = "Could not find: `{}`."]
+#[max_levenshtein_distance(3)]
+#[indention_prefix = "+"]
+#[lacking_permissions = "Hide"]
+#[lacking_role = "Strike"]
+#[wrong_channel = "Hide"]
+#[no_help_available_text = "**Error**: Command not found"]
+async fn my_help(
+    context: &Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>,
+) -> CommandResult {
+    help_commands::with_embeds(context, msg, args, help_options, groups, owners).await;
+    Ok(())
 }

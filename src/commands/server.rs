@@ -1,21 +1,26 @@
 use crate::{
-    commands::server,
     razi_toml::{Config, KagServer},
 };
 
 use chrono::Utc;
-use isahc::{AsyncReadResponseExt, Response};
+use isahc::AsyncReadResponseExt;
 use serde::Deserialize;
 use serde_json::from_str as convert_from_str;
 use serenity::{
-    framework::standard::{macros::command, Args, Command, CommandResult, Delimiter},
+    framework::standard::{
+        macros::command,
+        Args, CommandResult, Delimiter,
+    },
     model::channel::Message,
     prelude::Context,
     utils::{content_safe, Colour, ContentSafeOptions},
 };
 
 #[command]
-pub async fn kag_server_stats(ctx: &Context, msg: &Message) -> CommandResult {
+#[help_available]
+#[aliases("s", "server")]
+#[description("View server status, read pins to see current active list")]
+pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
     let config_lock = {
         let data_read = ctx.data.read().await;
 
@@ -30,9 +35,8 @@ pub async fn kag_server_stats(ctx: &Context, msg: &Message) -> CommandResult {
 
     {
         let config = config_lock.read().await;
-        let server = config.kag_servers.clone();
 
-        server_config = server.unwrap_or_default();
+        server_config = config.kag_servers.clone().unwrap_or_default();
     }
 
     if server_config.len() == 0 {
