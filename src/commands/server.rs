@@ -34,7 +34,7 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         server_config = config.kag_servers.clone().unwrap_or_default();
     }
 
-    if server_config.len() == 0 {
+    if server_config.is_empty(){
         msg.reply(ctx, "No server's in config file.").await?;
         return Ok(());
     }
