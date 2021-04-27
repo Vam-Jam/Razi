@@ -8,32 +8,10 @@ The main issue with riza was poor error handling, timing out and much more. To f
 
 Razi is using [serenity-rs api](https://github.com/serenity-rs/serenity)
 
-# How did you make it easier to 'maintain' ?
-The main way was too add a razi's toml file, which lets you change the token, prefixes, allowed channels, owners.
-```
-[discord]
-token = ""
-prefixes = [".", "~"]
-allowed_channels = [386495658418503680, 610155351047667752]
-owners = [233738372814864395, 301370472594014218, 165600688590553088, 142300409002852352]
-```
-<br>
-
-Along with this, you also have a kag server config, which allows you to add a new server for server_request command.
-<br>
-
-```
-[[kag_server]]
-names = ["mc", "3d", "goldenguy"]
-ip = "85.10.195.233"
-port = "50303"
-minimap = true
-```
-
 # Can I use it in my server?
 Go for it, however this bot will contain code thats aimed for my personal uses, this will cause issues for unrelated servers<br>
 I would recommend you steal the parts you like and use them in your own project.
 
 # Thank you notes:
-- Thank you to the serenity-rs team, they have helped me fix issues in the past.
+- Thank you to the serenity-rs team, amazing api and helpful community.
 - Caesar for making the picture
