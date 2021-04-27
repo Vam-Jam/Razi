@@ -56,23 +56,27 @@ impl EventHandler for Handler {
         _guild_id: GuildId,
         mut new_member: Member,
     ) {
-        let mut error = false; // this will get toggled to true if there's an error
-
-        let result = new_member.add_role(&ctx, RoleId(636085201461837834)).await;
-
-        if result.is_err() {
-            println!("new_member error {}", &result.err().unwrap());
-            error = true;
+        // Will error if we dont have permission or discord api issues
+        if new_member
+            .add_role(&ctx, RoleId(636085201461837834))
+            .await
+            .is_err()
+        {
+            println!("Could not whitelist user: {:?}", new_member);
+            return;
         }
 
         let gulag_date = Utc::now() - Duration::weeks(2);
 
+        // Is this user's account less then 2 weeks old
         let gulaged = if new_member.user.id.created_at() > gulag_date {
-            let result = new_member.add_role(&ctx, RoleId(377203918557675530)).await;
-
-            if result.is_err() {
-                println!("added role error {}", result.err().unwrap());
-                error = true;
+            if new_member
+                .add_role(&ctx, RoleId(377203918557675530))
+                .await
+                .is_err()
+            {
+                println!("Could not whitelist user: {:?}", new_member);
+                return;
             }
 
             let result = ChannelId(394522201589809173).send_message(&ctx.http, |m| {
@@ -81,8 +85,10 @@ impl EventHandler for Handler {
             }).await;
 
             if result.is_err() {
-                println!("new user gulag message error {}", result.err().unwrap());
-                error = true;
+                println!(
+                    "Could not notify user why they were caged: {}",
+                    result.unwrap_err()
+                );
             }
 
             true
@@ -90,16 +96,12 @@ impl EventHandler for Handler {
             false
         };
 
-        let _result = ChannelId(444912231176601600)
+        let result = ChannelId(444912231176601600)
             .send_message(&ctx.http, |m| {
                 m.embed(|e| {
                     e.colour(Colour::from_rgb(52, 235, 95));
 
-                    if error {
-                        e.title("New user has joined, Error in console");
-                    } else {
-                        e.title("New user has joined!");
-                    }
+                    e.title("New user has joined!");
 
                     if let Some(url) = new_member.user.avatar_url() {
                         e.thumbnail(url);
@@ -137,8 +139,8 @@ impl EventHandler for Handler {
             })
             .await;
 
-        if _result.is_err() {
-            println!("{}", _result.err().unwrap());
+        if result.is_err() {
+            println!("Logging new user joined error: {}", result.unwrap_err());
         }
     }
 
@@ -183,7 +185,7 @@ impl EventHandler for Handler {
             .await;
 
         if result.is_err() {
-            println!("Message builder error => {}", result.err().unwrap());
+            println!("Could not log user leaving: {}", result.unwrap_err());
         }
     }
 }
