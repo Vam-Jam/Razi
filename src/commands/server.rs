@@ -116,7 +116,7 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
     };
 
     if let Some(server) = json.serverStatus {
-        let player_count = server.currentPlayers;
+        let mut player_count = server.currentPlayers;
         let name = server.name;
         let mut players = String::new();
 
@@ -132,6 +132,14 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
                 player = player.replace("~", r"\~");
 
                 players += format!("{}\n", player).as_str();
+            }
+
+            // We need to check the length, since player_count is not reliable
+            // Player_count is commonly outdated, so when a server freezes we end up sending an empty string
+            // Causing an embed error
+            if players.len() == 0 {
+                players = String::from("Seems like the server is frozen 🧊");
+                player_count = 0;
             }
         }
 
