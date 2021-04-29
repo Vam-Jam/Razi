@@ -115,61 +115,70 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let player_count = json.serverStatus.currentPlayers;
-    let name = json.serverStatus.name;
-    let mut players = String::new();
+    if let Some(server) = json.serverStatus {
+        let player_count = server.currentPlayers;
+        let name = server.name;
+        let mut players = String::new();
 
-    if player_count == 0 {
-        players = String::from("No players currently in game");
-    } else {
-        for mut player in json.serverStatus.playerList {
-            // Sanatize player names for discord
-            player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default()).await;
+        if player_count == 0 {
+            players = String::from("No players currently in game");
+        } else {
+            for mut player in server.playerList {
+                // Sanatize player names for discord
+                player = content_safe(&ctx.cache, &player, &ContentSafeOptions::default()).await;
 
-            player = player.replace("_", r"\_");
-            player = player.replace("*", r"\*");
-            player = player.replace("~", r"\~");
+                player = player.replace("_", r"\_");
+                player = player.replace("*", r"\*");
+                player = player.replace("~", r"\~");
 
-            players += format!("{}\n", player).as_str();
+                players += format!("{}\n", player).as_str();
+            }
         }
-    }
 
-    // We have to send a new message otherwise discord wont embed image >:(
-    let result = msg
-        .channel_id
-        .send_message(ctx, |f| {
-            f.embed(|e| {
-                e.color(Colour::from_rgb(52, 235, 95));
-                e.title(name);
-                e.fields(vec![
-                    ("Player count", format!("{}", player_count), false),
-                    ("Players", players, false),
-                ]);
-                if server_to_query.minimap {
-                    e.image(format!(
-                        "https://api.kag2d.com/v1/game/thd/kag/server/{}/minimap?{}",
-                        &server_to_query.address,
-                        Utc::now().timestamp()
-                    ));
-                }
-                e
-            });
-            f
-        })
-        .await;
-
-    if let Err(error) = result {
-        // Attempt to edit our last message
-        userfeedback
-            .edit(ctx, |f| {
-                f.content("Sending embed failed. This has been logged internally.");
+        // We have to send a new message otherwise discord wont embed image >:(
+        let result = msg
+            .channel_id
+            .send_message(ctx, |f| {
+                f.embed(|e| {
+                    e.color(Colour::from_rgb(52, 235, 95));
+                    e.title(name);
+                    e.fields(vec![
+                        ("Player count", format!("{}", player_count), false),
+                        ("Players", players, false),
+                    ]);
+                    if server_to_query.minimap {
+                        e.image(format!(
+                            "https://api.kag2d.com/v1/game/thd/kag/server/{}/minimap?{}",
+                            &server_to_query.address,
+                            Utc::now().timestamp()
+                        ));
+                    }
+                    e
+                });
                 f
             })
-            .await?;
-        println!("Embed error: {}", error);
-        return Ok(());
-    } else {
-        userfeedback.delete(ctx).await?;
+            .await;
+
+        if let Err(error) = result {
+            // Attempt to edit our last message
+            userfeedback
+                .edit(ctx, |f| {
+                    f.content("Sending embed failed. This has been logged internally.");
+                    f
+                })
+                .await?;
+            println!("Embed error: {}, Json: {}", error, json_text);
+            return Ok(());
+        } else {
+            userfeedback.delete(ctx).await?;
+        }
+    }
+    else {
+        userfeedback.edit(ctx, |f| {
+            f.content(format!("api.kag2d.com has returned: \nError code: {}\nMessage: {}", json.statusCode.unwrap_or_default(), json.statusMessage.unwrap_or_default()));
+            f
+        })
+        .await?;
     }
 
     Ok(())
@@ -180,7 +189,14 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
 #[allow(non_snake_case, non_camel_case_types, dead_code)]
 #[derive(Deserialize)]
 struct json_kag {
-    serverStatus: status,
+    // Server status if server hasnt shat it self
+    serverStatus: Option<status>,
+
+    // Error codes if server has shat it self
+    statusCode: Option<u16>,
+    statusMessage: Option<String>,
+    statusSubCode: Option<u16>,
+    statusSubType: Option<String>,
 }
 
 #[allow(non_snake_case, non_camel_case_types, dead_code)]
