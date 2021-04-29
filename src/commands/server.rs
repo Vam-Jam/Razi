@@ -34,7 +34,7 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         server_config = config.kag_servers.clone().unwrap_or_default();
     }
 
-    if server_config.is_empty(){
+    if server_config.is_empty() {
         msg.reply(ctx, "No server's in config file.").await?;
         return Ok(());
     }
@@ -172,13 +172,17 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         } else {
             userfeedback.delete(ctx).await?;
         }
-    }
-    else {
-        userfeedback.edit(ctx, |f| {
-            f.content(format!("api.kag2d.com has returned: \nError code: {}\nMessage: {}", json.statusCode.unwrap_or_default(), json.statusMessage.unwrap_or_default()));
-            f
-        })
-        .await?;
+    } else {
+        userfeedback
+            .edit(ctx, |f| {
+                f.content(format!(
+                    "api.kag2d.com has returned: \nError code: {}\nMessage: {}",
+                    json.statusCode.unwrap_or_default(),
+                    json.statusMessage.unwrap_or_default()
+                ));
+                f
+            })
+            .await?;
     }
 
     Ok(())
