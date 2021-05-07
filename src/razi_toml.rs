@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serenity::prelude::TypeMapKey;
-use std::sync::Arc;
 use std::{default::Default, fs::File, io::prelude::Read};
+use std::{string, sync::Arc};
 use tokio::sync::RwLock;
 use toml::from_str;
 
@@ -26,6 +26,8 @@ pub struct KagServer {
     pub aliases: Option<Vec<String>>,
     pub minimap: bool,
     pub address: String,
+    pub tcpr_stats: Option<bool>,
+    pub tcpr_password: Option<String>,
 }
 
 // Required for us to write to serenity's client data

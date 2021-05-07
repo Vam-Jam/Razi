@@ -1,3 +1,4 @@
+use crate::misc::tcpr;
 use crate::razi_toml::{Config, KagServer};
 
 use chrono::Utc;
@@ -10,6 +11,8 @@ use serenity::{
     prelude::Context,
     utils::{content_safe, Colour, ContentSafeOptions},
 };
+
+use tcpr::Server;
 
 #[command]
 #[help_available]
@@ -39,44 +42,49 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         return Ok(());
     }
 
-    let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
+    let first_arg = {
+        let mut args = Args::new(msg.content.as_str(), &[Delimiter::Single(' ')]);
 
-    if args.len() < 2 {
-        msg.reply(ctx, "Command does not have enough arguments")
-            .await?;
-        return Ok(());
-    }
-
-    args.advance(); // Args include's the initial command text, so we need to skip that
-
-    // Wont panic since we already know length will be > 1
-    let first_arg = args.current().unwrap().to_lowercase();
-
-    let mut server_to_query: Option<KagServer> = None;
-
-    for server in server_config {
-        if server.name == first_arg {
-            server_to_query = Some(server);
-            break;
+        if args.len() < 2 {
+            msg.reply(ctx, "Command does not have enough arguments")
+                .await?;
+            return Ok(());
         }
 
-        if let Some(aliases) = &server.aliases {
-            for alias in aliases {
-                if alias == &first_arg {
-                    server_to_query = Some(server);
-                    break;
+        // Args include's the initial command text, so we need to skip that
+        args.advance();
+
+        // Wont panic since we already know length will be > 1
+        args.current().unwrap().to_lowercase()
+    };
+
+    let server_to_query = {
+        let mut server_to_query = None;
+
+        for server in server_config {
+            if server.name == first_arg {
+                server_to_query = Some(server);
+                break;
+            }
+
+            if let Some(aliases) = &server.aliases {
+                for alias in aliases {
+                    if alias == &first_arg {
+                        server_to_query = Some(server);
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    if server_to_query.is_none() {
-        msg.reply(ctx, "Could not find the server you requested.")
-            .await?;
-        return Ok(());
-    }
+        if server_to_query.is_none() {
+            msg.reply(ctx, "Could not find the server you requested.")
+                .await?;
+            return Ok(());
+        }
 
-    let server_to_query = server_to_query.unwrap();
+        server_to_query.unwrap()
+    };
 
     // Let the user know (and edit it once message has been recieved);
     let mut userfeedback = msg.reply(ctx, "Requesting from kag api now...").await?;
@@ -115,6 +123,7 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
         }
     };
 
+
     if let Some(server) = json.serverStatus {
         let mut player_count = server.currentPlayers;
         let name = server.name;
@@ -137,7 +146,7 @@ pub async fn kag_server_status(ctx: &Context, msg: &Message) -> CommandResult {
             // We need to check the length, since player_count is not reliable
             // Player_count is commonly outdated, so when a server freezes we end up sending an empty string
             // Causing an embed error
-            if players.len() == 0 {
+            if players.is_empty() {
                 players = String::from("Seems like the server is frozen 🧊");
                 player_count = 0;
             }
