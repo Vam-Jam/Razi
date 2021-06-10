@@ -30,6 +30,27 @@ pub async fn restart_tc(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+#[command]
+#[help_available]
+#[aliases("rtc2")]
+#[only_in("guild")]
+#[description("Restart TC2")]
+#[checks("ADMIN")]
+pub async fn restart_tc2(ctx: &Context, msg: &Message) -> CommandResult {
+    if let Err(err) = msg.reply(&ctx.http, "Updating & Restarting TC2").await {
+        println!("Couldnt send reply message => {}", err)
+    }
+
+    cmd::new("/bin/systemctl")
+        .arg("restart")
+        .arg("tc2")
+        .spawn()
+        .expect("Failed on systemctl cmd");
+
+    Ok(())
+}
+
+
 // TODO: Move into its own folder (when other places use the same check)
 #[check]
 #[name = "ADMIN"]

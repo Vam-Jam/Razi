@@ -40,7 +40,7 @@ struct General;
 struct Server;
 
 #[group]
-#[commands(restart_tc)]
+#[commands(restart_tc, restart_tc2)]
 struct Admin;
 
 struct Handler;
